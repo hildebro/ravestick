@@ -5,18 +5,22 @@ import pyqtgraph as pg
 import soundcard as sc
 from pyqtgraph.Qt import QtWidgets
 
+from ravestick.config import BAR_COUNT
+from ravestick.visualizer import Visualizer
+
 
 def main():
     print("Hello from ravestick!")
+
+    visualizer = Visualizer()
 
     # 1. Setup the GUI
     app = QtWidgets.QApplication(sys.argv)
     win = pg.GraphicsLayoutWidget(show=True, title="Ravestick Live Spectrum")
     plot = win.addPlot(title="Frequency Bars")
 
-    num_bars = 64
-    x = np.arange(num_bars)
-    y = np.zeros(num_bars)
+    x = np.arange(BAR_COUNT)
+    y = np.zeros(BAR_COUNT)
 
     # The frequency bars
     bargraph = pg.BarGraphItem(x=x, height=y, width=0.8, brush='c')
@@ -24,9 +28,9 @@ def main():
 
     # --- THE VIRTUAL LED STRIP ---
     # We create a row of dots at y=5.5 (just above the bar graph's max height)
-    led_y_positions = np.full(num_bars, 5.5)
+    led_y_positions = np.full(BAR_COUNT, 5.5)
     # Default brushes (black/off)
-    led_brushes = [pg.mkBrush(color=(0, 0, 0)) for _ in range(num_bars)]
+    led_brushes = [pg.mkBrush(color=(0, 0, 0)) for _ in range(BAR_COUNT)]
 
     led_strip = pg.ScatterPlotItem(
         x=x,
@@ -34,15 +38,15 @@ def main():
         size=15,
         symbol='o',
         brush=led_brushes,
-        pen=pg.mkPen(color=(50, 50, 50)) # Subtle border around the "LEDs"
+        pen=pg.mkPen(color=(50, 50, 50))  # Subtle border around the "LEDs"
     )
     plot.addItem(led_strip)
 
-    log_indices = np.logspace(0, np.log10(128), num=num_bars).astype(int)
+    log_indices = np.logspace(0, np.log10(BAR_COUNT * 2), num=BAR_COUNT).astype(int)
 
     # Increased Y-range slightly to fit our new virtual LED strip
     plot.setYRange(0, 6)
-    plot.setXRange(0, num_bars)
+    plot.setXRange(0, BAR_COUNT)
     plot.hideAxis('bottom')
 
     # 2. Setup Audio
@@ -66,13 +70,12 @@ def main():
             bargraph.setOpts(height=y)
 
             # --- UPDATE VIRTUAL LEDS ---
-            # Map the 'y' array (0.0 to ~5.0) to RGB brightness values (0 to 255)
-            intensities = np.clip((y / 5.0) * 255, 0, 255).astype(int)
+            visualizer.update(y)
 
             # Create new colors for each LED based on the intensity
-            for i in range(num_bars):
+            for i in range(BAR_COUNT):
                 # (R, G, B) - pulsing Cyan just like before
-                color = (0, intensities[i], intensities[i])
+                color = (0, visualizer.output()[i], visualizer.output()[i])
                 led_brushes[i] = pg.mkBrush(color=color)
 
             # Push the updated colors to the scatter plot
@@ -80,6 +83,7 @@ def main():
 
             # Force the GUI to redraw right now
             app.processEvents()
+
 
 if __name__ == "__main__":
     main()
