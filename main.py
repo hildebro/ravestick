@@ -9,7 +9,7 @@ from pyqtgraph.Qt import QtWidgets
 def main():
     print("Hello from ravestick!")
 
-    # 1. Setup the GUI (No QTimer needed this time)
+    # 1. Setup the GUI
     app = QtWidgets.QApplication(sys.argv)
     win = pg.GraphicsLayoutWidget(show=True, title="Ravestick Live Spectrum")
     plot = win.addPlot(title="Frequency Bars")
@@ -18,12 +18,30 @@ def main():
     x = np.arange(num_bars)
     y = np.zeros(num_bars)
 
+    # The frequency bars
     bargraph = pg.BarGraphItem(x=x, height=y, width=0.8, brush='c')
     plot.addItem(bargraph)
 
+    # --- THE VIRTUAL LED STRIP ---
+    # We create a row of dots at y=5.5 (just above the bar graph's max height)
+    led_y_positions = np.full(num_bars, 5.5)
+    # Default brushes (black/off)
+    led_brushes = [pg.mkBrush(color=(0, 0, 0)) for _ in range(num_bars)]
+
+    led_strip = pg.ScatterPlotItem(
+        x=x,
+        y=led_y_positions,
+        size=15,
+        symbol='o',
+        brush=led_brushes,
+        pen=pg.mkPen(color=(50, 50, 50)) # Subtle border around the "LEDs"
+    )
+    plot.addItem(led_strip)
+
     log_indices = np.logspace(0, np.log10(128), num=num_bars).astype(int)
 
-    plot.setYRange(0, 5) # Adjust based on mic sensitivity
+    # Increased Y-range slightly to fit our new virtual LED strip
+    plot.setYRange(0, 6)
     plot.setXRange(0, num_bars)
     plot.hideAxis('bottom')
 
@@ -37,26 +55,30 @@ def main():
     with default_mic.recorder(samplerate=16000, blocksize=256) as mic, \
             default_speaker.player(samplerate=16000, blocksize=256) as sp:
 
-        # Run as long as the graphical window remains open
         while win.isVisible():
-            # Capture and play audio
             data = mic.record(numframes=256)
-            # sp.play(data)
-
-            # We have array of arrays of a single number, so we squeeze one layer.
             data = data.squeeze(axis=1)
             fft_data = np.abs(np.fft.rfft(data))
-
             fft_data = fft_data[log_indices]
 
-            # Math: Apply visual decay for smooth falling bars
-            # Note for later: would be nice to not have any decay, but then we might get timing issues. Try it out later.
+            # Math: Apply visual decay
             y = np.maximum(fft_data, y * 0.5)
-
-            # Update the graph data
             bargraph.setOpts(height=y)
 
-            # THE MAGIC TRICK: Force the GUI to redraw right now
+            # --- UPDATE VIRTUAL LEDS ---
+            # Map the 'y' array (0.0 to ~5.0) to RGB brightness values (0 to 255)
+            intensities = np.clip((y / 5.0) * 255, 0, 255).astype(int)
+
+            # Create new colors for each LED based on the intensity
+            for i in range(num_bars):
+                # (R, G, B) - pulsing Cyan just like before
+                color = (0, intensities[i], intensities[i])
+                led_brushes[i] = pg.mkBrush(color=color)
+
+            # Push the updated colors to the scatter plot
+            led_strip.setData(x=x, y=led_y_positions, brush=led_brushes)
+
+            # Force the GUI to redraw right now
             app.processEvents()
 
 if __name__ == "__main__":
