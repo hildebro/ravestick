@@ -14,15 +14,17 @@ def main():
     win = pg.GraphicsLayoutWidget(show=True, title="Ravestick Live Spectrum")
     plot = win.addPlot(title="Frequency Bars")
 
-    num_bars = 129
+    num_bars = 64
     x = np.arange(num_bars)
     y = np.zeros(num_bars)
 
     bargraph = pg.BarGraphItem(x=x, height=y, width=0.8, brush='c')
     plot.addItem(bargraph)
 
+    log_indices = np.logspace(0, np.log10(128), num=num_bars).astype(int)
+
     plot.setYRange(0, 5) # Adjust based on mic sensitivity
-    plot.setXRange(0, 129)
+    plot.setXRange(0, num_bars)
     plot.hideAxis('bottom')
 
     # 2. Setup Audio
@@ -39,11 +41,13 @@ def main():
         while win.isVisible():
             # Capture and play audio
             data = mic.record(numframes=256)
-            sp.play(data)
+            # sp.play(data)
 
             # We have array of arrays of a single number, so we squeeze one layer.
             data = data.squeeze(axis=1)
             fft_data = np.abs(np.fft.rfft(data))
+
+            fft_data = fft_data[log_indices]
 
             # Math: Apply visual decay for smooth falling bars
             # Note for later: would be nice to not have any decay, but then we might get timing issues. Try it out later.
