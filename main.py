@@ -5,7 +5,7 @@ import pyqtgraph as pg
 import soundcard as sc
 from pyqtgraph.Qt import QtWidgets
 
-from ravestick.config import BAR_COUNT
+from ravestick.config import BAR_COUNT, BAR_DECAY_RATIO
 from ravestick.visualizer import Visualizer
 
 
@@ -66,7 +66,7 @@ def main():
             fft_data = fft_data[log_indices]
 
             # Math: Apply visual decay
-            y = np.maximum(fft_data, y * 0.5)
+            y = np.maximum(fft_data, y * BAR_DECAY_RATIO)
             bargraph.setOpts(height=y)
 
             # --- UPDATE VIRTUAL LEDS ---
