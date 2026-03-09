@@ -13,10 +13,12 @@ class ThreeBandCyanPulseEffect:
 
     def process(self, frequency_bars):
         """Groups 64 bars into 3 bands. Pulses the entire vertical strip in Cyan based on intensity."""
-        # 1. Bucket the frequencies
-        bass = np.mean(frequency_bars[0:10])  # Low frequencies
-        mids = np.mean(frequency_bars[10:35])  # Mid frequencies
-        highs = np.mean(frequency_bars[35:64])  # High frequencies
+        # Bass: 62.5 Hz to ~250 Hz (The Kick & Sub)
+        bass = np.mean(frequency_bars[0:18])
+        # Mids: ~250 Hz to ~4,000 Hz (Vocals, Snare, Synths, Guitars)
+        mids = np.mean(frequency_bars[18:54])
+        # Highs: ~4,000 Hz to 8,000 Hz (Cymbals, Hi-hats, Air)
+        highs = np.mean(frequency_bars[54:64])
 
         bands = [bass, mids, highs]
 
@@ -51,9 +53,12 @@ class ThreeBandVUMeterEffect:
     def process(self, frequency_bars):
         """Groups 64 bars into 3 bands. Bass is all-or-nothing, Mids/Highs are proportional."""
         # 1. Bucket the frequencies
-        bass = np.mean(frequency_bars[0:10])  # Low frequencies
-        mids = np.mean(frequency_bars[10:35])  # Mid frequencies
-        highs = np.mean(frequency_bars[35:64])  # High frequencies
+        # Bass: 62.5 Hz to ~250 Hz (The Kick & Sub)
+        bass = np.mean(frequency_bars[0:18])
+        # Mids: ~250 Hz to ~4,000 Hz (Vocals, Snare, Synths, Guitars)
+        mids = np.mean(frequency_bars[18:54])
+        # Highs: ~4,000 Hz to 8,000 Hz (Cymbals, Hi-hats, Air)
+        highs = np.mean(frequency_bars[54:64])
 
         bands = [bass, mids, highs]
 
