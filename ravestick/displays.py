@@ -7,16 +7,23 @@ from flask import Flask, render_template, Response
 
 
 class WebDisplay:
-    def __init__(self, port=5000):
+    def __init__(self, port=5000, on_switch_callback=None):
         self.port = port
         self.active = True
         self.latest_data = {"bars": [], "leds": []}
+        self.on_switch_callback = on_switch_callback
 
         self.app = Flask(__name__)
 
         @self.app.route('/')
         def index():
             return render_template('index.html')
+
+        @self.app.route('/api/switch_effect', methods=['POST'])
+        def switch_effect():
+            if self.on_switch_callback:
+                self.on_switch_callback()
+            return {"status": "success"}, 200
 
         @self.app.route('/stream')
         def stream():

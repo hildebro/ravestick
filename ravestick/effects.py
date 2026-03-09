@@ -79,3 +79,19 @@ class ThreeBandVUMeterEffect:
                 led_colors[band_idx, led_idx] = self.band_colors[band_idx]
 
         return led_colors
+
+
+class EffectManager:
+    def __init__(self, effects_list):
+        self.effects = effects_list
+        self.active_index = 0
+
+    def next_effect(self):
+        """Cycles to the next visualizer in the list."""
+        self.active_index = (self.active_index + 1) % len(self.effects)
+        active_effect_name = self.effects[self.active_index].__class__.__name__
+        print(f"Switched to visualizer: {active_effect_name}")
+
+    def process(self, frequency_bars):
+        """Passes the audio data to the currently active visualizer."""
+        return self.effects[self.active_index].process(frequency_bars)

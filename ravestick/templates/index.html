@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>Ravestick Live Web</title>
     <style>
@@ -11,40 +11,68 @@
             align-items: center;
             font-family: sans-serif;
         }
+
         canvas {
             background-color: #000;
             border: 1px solid #333;
+            margin-top: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+        }
+
+        #switchBtn {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            background-color: #00ffff;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
             margin-top: 20px;
-            box-shadow: 0 0 20px rgba(0,255,255,0.1);
+            transition: background-color 0.2s;
+        }
+
+        #switchBtn:hover {
+            background-color: #00cccc;
+        }
+
+        #switchBtn:active {
+            transform: scale(0.98);
         }
     </style>
 </head>
 <body>
-<h2>Ravestick Live Web Visualization</h2>
+<h2>Ravestick Live Web</h2>
+
+<button id="switchBtn" onclick="switchEffect()">Switch Visualizer</button>
+
 <canvas id="viz" width="800" height="400"></canvas>
 
 <script>
+    // Tell the Python backend to switch the visualizer
+    function switchEffect() {
+        fetch('/api/switch_effect', {method: 'POST'});
+    }
+
     const canvas = document.getElementById('viz');
     const ctx = canvas.getContext('2d');
 
     // Connect to the Flask SSE stream
     const evtSource = new EventSource('/stream');
 
-    evtSource.onmessage = function(event) {
+    evtSource.onmessage = function (event) {
         const data = JSON.parse(event.data);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 1. Draw the 64 background frequency bars
+        // Draw Background Bars
         ctx.fillStyle = 'rgba(80, 80, 80, 0.4)';
         const barWidth = canvas.width / data.bars.length;
         data.bars.forEach((val, i) => {
-            // Scale the value (assuming a max amplitude around 6.0)
             const h = (val / 6.0) * canvas.height;
             ctx.fillRect(i * barWidth, canvas.height - h, barWidth - 2, h);
         });
 
-        // 2. Draw the 3 Vertical LED columns
-        // X-positions for Bass, Mids, Highs
+        // Draw Vertical LEDs
         const bandX = [canvas.width * 0.1, canvas.width * 0.5, canvas.width * 0.9];
         const ledSize = 15;
         const ledSpacing = 18;
