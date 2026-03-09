@@ -1,7 +1,9 @@
+import numpy as np  # Added for the clipping math
 import soundcard as sc
 
 from ravestick.audio import AudioAnalyzer
-from ravestick.config import BAR_COUNT, BAR_DECAY_RATIO, LEDS_PER_BAND
+# Make sure to add SENSITIVITY to your config imports here!
+from ravestick.config import BAR_COUNT, BAR_DECAY_RATIO, LEDS_PER_BAND, SENSITIVITY
 from ravestick.displays import WebDisplay
 from ravestick.effects import EffectManager, ThreeBandVUMeterEffect, ThreeBandCyanPulseEffect
 
@@ -27,11 +29,18 @@ def main():
             while display.is_active():
                 raw_data = mic.record(numframes=256)
 
+                # 1. Get the raw normalized curve from the analyzer
                 freq_bars = analyzer.process(raw_data)
 
+                # 2. Apply the global sensitivity multiplier and clip at 1.0
+                freq_bars = np.clip(freq_bars * SENSITIVITY, 0.0, 1.0)
+
+                # 3. Pass the boosted bars to the effects
                 led_colors = manager.process(freq_bars)
 
+                # 4. Send everything to the web frontend
                 display.update(freq_bars, led_colors)
+
     except KeyboardInterrupt:
         print("\nShutting down gracefully...")
         display.active = False
