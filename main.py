@@ -3,14 +3,15 @@ import soundcard as sc
 from ravestick.audio import AudioAnalyzer
 from ravestick.config import BAR_COUNT, BAR_DECAY_RATIO, LEDS_PER_BAND
 from ravestick.displays import GUIDisplay
-from ravestick.effects import ThreeBandVUMeterEffect
+from ravestick.effects import ThreeBandCyanPulseEffect
 
 
 def main():
     print("Hello from ravestick!")
 
     analyzer = AudioAnalyzer(BAR_COUNT, BAR_DECAY_RATIO)
-    effect = ThreeBandVUMeterEffect(BAR_COUNT)
+    # effect = ThreeBandVUMeterEffect(BAR_COUNT)
+    effect = ThreeBandCyanPulseEffect(BAR_COUNT)
     display = GUIDisplay(BAR_COUNT, LEDS_PER_BAND)
 
     default_mic = sc.default_microphone()

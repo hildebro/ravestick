@@ -7,23 +7,34 @@ class BaseEffect:
         raise NotImplementedError("Subclasses must implement process()")
 
 
-class CyanPulseEffect(BaseEffect):
-    def __init__(self, led_count):
-        self.led_count = led_count
+class ThreeBandCyanPulseEffect:
+    def __init__(self, leds_per_band):
+        self.leds_per_band = leds_per_band
 
     def process(self, frequency_bars):
-        """Converts frequency intensities into Cyan RGB values."""
-        # scale to 0-255
-        intensities = np.clip((frequency_bars / 5.0) * 255, 0, 255).astype(int)
+        """Groups 64 bars into 3 bands. Pulses the entire vertical strip in Cyan based on intensity."""
+        # 1. Bucket the frequencies
+        bass = np.mean(frequency_bars[0:10])  # Low frequencies
+        mids = np.mean(frequency_bars[10:35])  # Mid frequencies
+        highs = np.mean(frequency_bars[35:64])  # High frequencies
 
-        # Create an array of (R, G, B) colors
-        colors = np.zeros((self.led_count, 3), dtype=int)
+        bands = [bass, mids, highs]
 
-        # Set Green and Blue channels to the intensity to make Cyan
-        colors[:, 1] = intensities  # Green
-        colors[:, 2] = intensities  # Blue
+        # Create an empty array for our LED colors. Shape: (3 bands, N leds, RGB)
+        led_colors = np.zeros((3, self.leds_per_band, 3), dtype=int)
 
-        return colors
+        for band_idx, amplitude in enumerate(bands):
+            # Scale amplitude to a 0-255 brightness value (assuming average max amplitude is ~5.0)
+            intensity = int(np.clip((amplitude / 5.0) * 255, 0, 255))
+
+            # Pulse Cyan (R=0, G=intensity, B=intensity)
+            color = (0, intensity, intensity)
+
+            # Apply this exact color to EVERY LED in the current vertical band
+            for led_idx in range(self.leds_per_band):
+                led_colors[band_idx, led_idx] = color
+
+        return led_colors
 
 
 class ThreeBandVUMeterEffect:
