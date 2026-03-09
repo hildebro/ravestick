@@ -19,7 +19,7 @@ class ThreeBandCyanPulseEffect(BaseEffect):
         led_colors = np.zeros((3, self.leds_per_band, 3), dtype=int)
 
         for band_idx, amplitude in enumerate(bands):
-            # Amplitude is already 0.0 to 1.0, so just multiply by 255 for RGB intensity!
+            # Amplitude is already 0.0 to 1.0, so just multiply by 255 for RGB intensity
             intensity = int(np.clip(amplitude * 255, 0, 255))
             color = (0, intensity, intensity)
 
@@ -30,7 +30,7 @@ class ThreeBandCyanPulseEffect(BaseEffect):
 
 
 class ThreeBandVUMeterEffect(BaseEffect):
-    def __init__(self, leds_per_band, bass_threshold=0.6):  # Threshold is now a percentage!
+    def __init__(self, leds_per_band, bass_threshold=0.6):
         self.leds_per_band = leds_per_band
         self.bass_threshold = bass_threshold
 
@@ -50,10 +50,10 @@ class ThreeBandVUMeterEffect(BaseEffect):
 
         for band_idx, amplitude in enumerate(bands):
             if band_idx == 0:
-                # Trigger bass if it hits 60% capacity (0.6)
+                # Trigger bass if it hits the threshold
                 active_leds_count = self.leds_per_band if amplitude >= self.bass_threshold else 0
             else:
-                # Amplitude is 0.0 to 1.0, so multiply by total LEDs to get how many to turn on!
+                # Amplitude is 0.0 to 1.0, so multiply by total LEDs to get how many to turn on
                 active_leds_count = int(np.clip(amplitude * self.leds_per_band, 0, self.leds_per_band))
 
             for led_idx in range(active_leds_count):
