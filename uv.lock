@@ -208,6 +208,7 @@ dependencies = [
     { name = "board" },
     { name = "flask" },
     { name = "neopixel" },
+    { name = "numpy", marker = "platform_machine != 'armv7l'" },
     { name = "soundcard" },
 ]
 
@@ -216,6 +217,7 @@ requires-dist = [
     { name = "board", specifier = ">=1.0" },
     { name = "flask", specifier = ">=3.1.3" },
     { name = "neopixel", specifier = ">=0.0.1" },
+    { name = "numpy", marker = "platform_machine != 'armv7l'", specifier = ">=1.26.0" },
     { name = "soundcard", specifier = ">=0.4.5" },
 ]
 
