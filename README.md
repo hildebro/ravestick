@@ -4,7 +4,10 @@
 Run `uv sync`
 
 ### On arm
-Install these packages:
-`portaudio19-dev python3-all-dev libffi-dev`
+Install these packages: `portaudio19-dev python3-all-dev libffi-dev`
 
-Then run `uv venv` followed by `uv pip install --extra-index-url https://www.piwheels.org/simple -e .`
+Then run:  
+`uv venv --python /usr/bin/python3 --system-site-packages`
+
+Followed by:  
+`uv pip install --extra-index-url https://www.piwheels.org/simple -e .`
