@@ -5,11 +5,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "board>=1.0",
     "flask>=3.1.3",
-    "neopixel>=0.0.1",
     "soundcard>=0.4.5",
     # takes too long to build on arm, using system library instead
     "numpy>=1.26.0; platform_machine != 'armv7l'",
-    "scipy>=1.13.0; platform_machine != 'armv7l'",
 ]

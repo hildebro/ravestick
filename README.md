@@ -5,4 +5,4 @@
 
 ### On arm
 Install these packages:
-`portaudio19-dev python3-all-dev libffi-dev python3-numpy python3-scipy`
+`portaudio19-dev python3-all-dev libffi-dev python3-numpy`
