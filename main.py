@@ -1,4 +1,4 @@
-import soundcard as sc
+import sounddevice as sd
 
 from ravestick.audio import AudioAnalyzer
 from ravestick.config import BAR_COUNT, BAR_DECAY_RATIO, LEDS_PER_BAND
@@ -16,14 +16,29 @@ def main():
 
     display = WebDisplay(port=5000, on_switch_callback=manager.next_effect)
 
-    default_mic = sc.default_microphone()
-    print(f"Using Mic: {default_mic.name}")
+    # Ask ALSA for the default input device info
+    try:
+        default_mic = sd.query_devices(kind='input')
+        print(f"Using Mic: {default_mic['name']}")
+    except ValueError:
+        print("No default ALSA input device found! You may need to specify a device ID.")
+        return
 
     # main processing loop
     try:
-        with default_mic.recorder(samplerate=16000, blocksize=256) as mic:
+        # sd.InputStream streams raw audio data into numpy arrays.
+        # channels=1 ensures a flat, predictable mono array for your analyzer.
+        with sd.InputStream(samplerate=16000, blocksize=256, channels=1) as stream:
+
             while display.is_active():
-                raw_data = mic.record(numframes=256)
+                # stream.read() returns the numpy array AND a boolean overflow flag
+                raw_data, overflow = stream.read(256)
+
+                if overflow:
+                    # Useful for tuning: if this prints, the BeagleBone is taking
+                    # too long to crunch the math and dropped some audio frames.
+                    print("Warning: Audio buffer overflow!")
+
                 freq_bars = analyzer.process(raw_data)
                 led_colors = manager.process(freq_bars)
                 display.update(freq_bars, led_colors)
@@ -31,6 +46,10 @@ def main():
     except KeyboardInterrupt:
         print("\nShutting down gracefully...")
         display.active = False
+
+    except sd.PortAudioError as e:
+        print(f"\nALSA Audio Error: {e}")
+        print("Run 'python -m sounddevice' in your terminal to list actual device IDs.")
 
 
 if __name__ == "__main__":
