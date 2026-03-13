@@ -4,7 +4,6 @@
 / {
     compatible = "ti,beaglebone", "ti,beaglebone-black";
 
-    /* Part 1: Enable the McASP0 Hardware */
     fragment@0 {
         target = <&mcasp0>;
         __overlay__ {
@@ -12,13 +11,14 @@
             #sound-dai-cells = <0>;
             op-mode = <0>;
             tdm-slots = <2>;
-            serial-dir = < 2 0 0 0 >;
+            /* Add a TX (Transmit) channel to trick the clocks */
+            /* 2 = RX (Mic data in), 1 = TX (Dummy data out) */
+            serial-dir = < 2 1 0 0 >;
             tx-num-evt = <32>;
             rx-num-evt = <32>;
         };
     };
 
-    /* Part 2: Create the Virtual Soundcard & Force Clocks */
     fragment@1 {
         target-path = "/";
         __overlay__ {
@@ -27,26 +27,23 @@
                 simple-audio-card,name = "INMP441-Mic";
                 simple-audio-card,format = "i2s";
 
-                /* Ensure BBB acts as the clock Master */
                 simple-audio-card,bitclock-master = <&dailink0_master>;
                 simple-audio-card,frame-master = <&dailink0_master>;
-
-                /* Set the Master Clock to Frame Sync ratio */
                 simple-audio-card,mclk-fs = <256>;
 
                 dailink0_master: simple-audio-card,cpu {
                     sound-dai = <&mcasp0>;
-                    /* Force the internal clock generator ON */
                     system-clock-frequency = <24576000>;
                 };
 
                 simple-audio-card,codec {
-                    sound-dai = <&dmic_codec>;
+                    sound-dai = <&snd_soc_dummy>;
                 };
             };
 
-            dmic_codec: dmic_codec {
-                compatible = "dmic-codec";
+            /* Use a generic codec that supports playback AND recording */
+            snd_soc_dummy: snd-soc-dummy {
+                compatible = "linux,snd-soc-dummy";
                 #sound-dai-cells = <0>;
             };
         };
