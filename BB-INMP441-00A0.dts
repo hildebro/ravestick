@@ -1,0 +1,64 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "ti,beaglebone", "ti,beaglebone-black";
+
+    /* Part 1: Configure the P9 Pins for I2S */
+    fragment@0 {
+        target = <&am33xx_pinmux>;
+        __overlay__ {
+            i2s_mic_pins: pinmux_i2s_mic_pins {
+                pinctrl-single,pins = <
+                    0x190 0x00  /* P9_31 mcasp0_aclkx (Clock) - OUTPUT */
+                    0x194 0x00  /* P9_29 mcasp0_fsx (Frame Sync) - OUTPUT */
+                    0x198 0x20  /* P9_30 mcasp0_axr0 (Data In) - INPUT */
+                >;
+            };
+        };
+    };
+
+    /* Part 2: Enable the McASP0 Hardware */
+    fragment@1 {
+        target = <&mcasp0>;
+        __overlay__ {
+            pinctrl-names = "default";
+            pinctrl-0 = <&i2s_mic_pins>;
+            status = "okay";
+            op-mode = <0>;  /* I2S mode */
+            tdm-slots = <2>; /* Stereo format (even if mono mic) */
+            serial-dir = <  /* 0: INACTIVE, 1: TX, 2: RX */
+                2 0 0 0
+            >;
+            tx-num-evt = <32>;
+            rx-num-evt = <32>;
+        };
+    };
+
+    /* Part 3: Create the Virtual Soundcard */
+    fragment@2 {
+        target-path = "/";
+        __overlay__ {
+            sound {
+                compatible = "simple-audio-card";
+                simple-audio-card,name = "INMP441-Mic";
+                simple-audio-card,format = "i2s";
+                simple-audio-card,bitclock-master = <&dailink0_master>;
+                simple-audio-card,frame-master = <&dailink0_master>;
+
+                dailink0_master: simple-audio-card,cpu {
+                    sound-dai = <&mcasp0>;
+                };
+
+                simple-audio-card,codec {
+                    sound-dai = <&dmic_codec>;
+                };
+            };
+
+            dmic_codec: dmic_codec {
+                compatible = "dmic-codec";
+                #sound-dai-cells = <0>;
+            };
+        };
+    };
+};
