@@ -24,16 +24,28 @@ Connect the pins:
 ### Packages
 
 Install these packages with the given package manager:  
-`portaudio19-dev python3-all-dev libffi-dev libopenblas0`
+`portaudio19-dev python3-all-dev libffi-dev libopenblas0 busybox`
 
 ### Device tree overlay
 
 You need to tell the BeagleBone what to do with those connected pins from above. Compile the definitions via:  
-`dtc -O dtb -o BB-INMP441-00A0.dtbo -b 0 -@ BB-INMP441-00A0.dts`
+`dtc -O dtb -o BB-INMP441-00A0.dtbo -b 0 -@ BB-INMP441-00A0.dts`  
 Then move the generated `dtbo` file to `/lib/firmware/`.  
 
 Finally, that `dtbo` file must be loaded. Modify `/boot/uEnv.txt` in the section `###Additional custom capes` add:  
-`uboot_overlay_addr4=/lib/firmware/BB-INMP441-00A0.dtbo`
+`uboot_overlay_addr4=/lib/firmware/BB-INMP441-00A0.dtbo`  
+Also make sure that these two lines are not commented-out:  
+```
+disable_uboot_overlay_video=1
+disable_uboot_overlay_audio=1
+```
+
+Restart the system, then execute these:  
+```shell
+sudo busybox devmem 0x44E10990 w 0x20
+sudo busybox devmem 0x44E10994 w 0x20
+sudo busybox devmem 0x44E10998 w 0x20
+```
 
 ### Build
 

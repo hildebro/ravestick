@@ -4,29 +4,14 @@
 / {
     compatible = "ti,beaglebone", "ti,beaglebone-black";
 
-    /* Part 1: Configure the P9 Pins for I2S */
+    /* Part 1: Enable the McASP0 Hardware */
     fragment@0 {
-        target = <&am33xx_pinmux>;
-        __overlay__ {
-            i2s_mic_pins: pinmux_i2s_mic_pins {
-                pinctrl-single,pins = <
-                    0x190 0x00  /* P9_31 mcasp0_aclkx (Clock) - OUTPUT */
-                    0x194 0x00  /* P9_29 mcasp0_fsx (Frame Sync) - OUTPUT */
-                    0x198 0x20  /* P9_30 mcasp0_axr0 (Data In) - INPUT */
-                >;
-            };
-        };
-    };
-
-    /* Part 2: Enable the McASP0 Hardware */
-    fragment@1 {
         target = <&mcasp0>;
         __overlay__ {
-            pinctrl-names = "default";
-            pinctrl-0 = <&i2s_mic_pins>;
             status = "okay";
-            op-mode = <0>;  /* I2S mode */
-            tdm-slots = <2>; /* Stereo format (even if mono mic) */
+            #sound-dai-cells = <0>;  /* Prevents the ASoC Error -22 */
+            op-mode = <0>;          /* I2S mode */
+            tdm-slots = <2>;        /* Stereo format */
             serial-dir = <  /* 0: INACTIVE, 1: TX, 2: RX */
                 2 0 0 0
             >;
@@ -35,8 +20,8 @@
         };
     };
 
-    /* Part 3: Create the Virtual Soundcard */
-    fragment@2 {
+    /* Part 2: Create the Virtual Soundcard */
+    fragment@1 {
         target-path = "/";
         __overlay__ {
             sound {
