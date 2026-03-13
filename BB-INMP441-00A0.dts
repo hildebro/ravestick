@@ -9,18 +9,16 @@
         target = <&mcasp0>;
         __overlay__ {
             status = "okay";
-            #sound-dai-cells = <0>;  /* Prevents the ASoC Error -22 */
-            op-mode = <0>;          /* I2S mode */
-            tdm-slots = <2>;        /* Stereo format */
-            serial-dir = <  /* 0: INACTIVE, 1: TX, 2: RX */
-                2 0 0 0
-            >;
+            #sound-dai-cells = <0>;
+            op-mode = <0>;
+            tdm-slots = <2>;
+            serial-dir = < 2 0 0 0 >;
             tx-num-evt = <32>;
             rx-num-evt = <32>;
         };
     };
 
-    /* Part 2: Create the Virtual Soundcard */
+    /* Part 2: Create the Virtual Soundcard & Force Clocks */
     fragment@1 {
         target-path = "/";
         __overlay__ {
@@ -28,11 +26,18 @@
                 compatible = "simple-audio-card";
                 simple-audio-card,name = "INMP441-Mic";
                 simple-audio-card,format = "i2s";
+
+                /* Ensure BBB acts as the clock Master */
                 simple-audio-card,bitclock-master = <&dailink0_master>;
                 simple-audio-card,frame-master = <&dailink0_master>;
 
+                /* Set the Master Clock to Frame Sync ratio */
+                simple-audio-card,mclk-fs = <256>;
+
                 dailink0_master: simple-audio-card,cpu {
                     sound-dai = <&mcasp0>;
+                    /* Force the internal clock generator ON */
+                    system-clock-frequency = <24576000>;
                 };
 
                 simple-audio-card,codec {
