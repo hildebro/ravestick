@@ -2,50 +2,29 @@
 
 Listens to music around you and turns it into light patterns.
 
-These instructions are written specifically to get the software running on a BeagleBone Black with an INMP441
-microphone. I've written it down mostly as a future reference for myself. If you found this repository and want to try
-it out yourself with different hardware, you will have to make adjustments.
+These instructions are written specifically to get the software running on a BeagleBone Black. I've written it down
+mostly as a future reference for myself. If you found this repository and want to try it out yourself with different
+hardware, you will have to make adjustments.
 
 ## Hardware setup
 
-Connect the pins:
+You will need:
 
-| INMP441 Pin	 | BeagleBone Black Pin | Function / Description                                                                                                                 |
-|:-------------|----------------------|----------------------------------------------------------------------------------------------------------------------------------------|
-| VDD	         | P9_03	               | 3.3V Power. (Do not use 5V, as it will damage the mic and the BBB's data pins).                                                        |
-| GND	         | P9_01	               | Ground.                                                                                                                                |
-| L/R	         | P9_02	               | Channel Select. Connecting this to Ground (P9_02) sets the mic to output on the Left channel, which is standard for a single mono mic. |
-| SCK	         | P9_31	               | Serial Clock / Bit Clock (mcasp0_aclkx). Provides the timing for the data bits.                                                        |
-| WS	          | P9_29	               | Word Select / Frame Sync (mcasp0_fsx). Tells the system if the data is for the left or right channel.                                  |
-| SD	          | P9_30	               | Serial Data In (mcasp0_axr0). This is where the actual audio data is sent into the BBB.                                                |
+- BeagleBone Black
+    - If you use another SoC, make sure that it has an analog-to-digital converter. Otherwise, the potentiometers won't
+      work.
+- USB microphone
+    - I've tried using an I2S microphone. But it's a pain to set up with the BeagleBone. The microphone didn't show up
+      at all until I disabled the HDMI functionality. Sadly, I2S microphones require an external heartbeat and the
+      BeagleBone has its heartbeat linked to the HDMI output. So it seems an external crystal oscillator is required to
+      make this work and at that point, I just defaulted back to a simple USB microphone.
 
 ## Software setup
 
 ### Packages
 
 Install these packages with the given package manager:  
-`portaudio19-dev python3-all-dev libffi-dev libopenblas0 busybox`
-
-### Device tree overlay
-
-You need to tell the BeagleBone what to do with those connected pins from above. Compile the definitions via:  
-`dtc -O dtb -o BB-INMP441-00A0.dtbo -b 0 -@ BB-INMP441-00A0.dts`  
-Then move the generated `dtbo` file to `/lib/firmware/`.  
-
-Finally, that `dtbo` file must be loaded. Modify `/boot/uEnv.txt` in the section `###Additional custom capes` add:  
-`uboot_overlay_addr4=/lib/firmware/BB-INMP441-00A0.dtbo`  
-Also make sure that these two lines are not commented-out:  
-```
-disable_uboot_overlay_video=1
-disable_uboot_overlay_audio=1
-```
-
-Restart the system, then execute these:  
-```shell
-sudo busybox devmem 0x44E10990 w 0x20
-sudo busybox devmem 0x44E10994 w 0x20
-sudo busybox devmem 0x44E10998 w 0x20
-```
+`portaudio19-dev python3-all-dev libffi-dev libopenblas0`
 
 ### Build
 
@@ -70,6 +49,4 @@ Run `uv run main.py` to build and start the project.
 
 ### Debug on arm
 
-Make sure to install `alsa-utils` on the arm chip.
-
-Use `arecord -l` to see, if your microphone is recognized.
+Use `arecord -l` (comes with package `alsa-utils`) to see, if your microphone is recognized.
